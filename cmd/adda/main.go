@@ -1,7 +1,7 @@
 package main
 
 import (
-	"adda/pkg/adda"
+	"adda/pkg/commands"
 	"fmt"
 	"os"
 )
@@ -16,7 +16,7 @@ func main() {
 
     switch args[0] {
     case "init":
-        err := adda.Init()
+        err := commands.Init()
         if err != nil {
             fmt.Println(err.Error())
             os.Exit(1)

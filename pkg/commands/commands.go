@@ -1,4 +1,4 @@
-package adda
+package commands
 
 import (
 	"adda/pkg/errors"
@@ -6,6 +6,8 @@ import (
 	"os"
 )
 
+// Initializes an Adda repository by creating all of the neccessary init files.
+// Return an InitError if the process failes.
 func Init() error {
     // Creating .adda/ directory
     err := os.Mkdir(".adda", os.ModePerm)
@@ -36,4 +38,8 @@ func Init() error {
     defer index.Close()
 
     return nil
+}
+
+func Add() {
+
 }
