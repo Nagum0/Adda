@@ -43,10 +43,11 @@ func Init() error {
 
 func Add(filePath string) error {
     blob := objects.NewBlob(filePath, objects.FILE)
-    _, err := blob.GenerateContents()
+    compressedData, err := blob.Contents()
     if err != nil {
-        fmt.Println(err.Error())
+        return errors.NewAddError(fmt.Sprintf("Error while adding file [%v]: %v", filePath, err.Error()), filePath)
     }
-    fmt.Println(blob.Contents)
+    fmt.Println(compressedData)
+
     return nil
 }

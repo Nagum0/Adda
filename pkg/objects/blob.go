@@ -11,27 +11,33 @@ import (
 // Represents a blob object.
 type Blob struct {
     FilePath string
-    Contents []byte
-    Hash     string
+    contents []byte
+    hash     string
     Type     FileType
     Length   int
 }
 
+// Creates a new empty blob object.
 func NewBlob(filePath string, fileType FileType) *Blob {
     return &Blob { 
         FilePath: filePath,
-        Contents: make([]byte, 0),
-        Hash: "",
+        contents: nil,
+        hash: "",
         Type: fileType,
         Length: 0,
     }
 }
 
-func (b *Blob) GenerateHash() string {
-    return ""
+func (b *Blob) Hash() string {
+    panic("Not implemented")
 }
 
-func (b *Blob) GenerateContents() ([]byte, error) {
+// Returns the compressed contents of the blob object.
+func (b *Blob) Contents() ([]byte, error) {
+    if b.contents != nil {
+        return b.contents, nil
+    }
+
     fileContents, err := os.ReadFile(b.FilePath)
     if err != nil {
         return nil, errors.NewBlobError(fmt.Sprintf("Error while reading file for blob object creation: %v", b.FilePath))
@@ -47,7 +53,7 @@ func (b *Blob) GenerateContents() ([]byte, error) {
     writer.Close()
 
     bytes := buffer.Bytes()
-    b.Contents = bytes
+    b.contents = bytes
 
     return bytes, nil
 }
