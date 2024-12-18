@@ -4,6 +4,8 @@ import (
 	"adda/pkg/errors"
 	"bytes"
 	"compress/zlib"
+	"crypto/sha1"
+	"encoding/hex"
 	"fmt"
 	"os"
 )
@@ -28,8 +30,26 @@ func NewBlob(filePath string, fileType FileType) *Blob {
     }
 }
 
-func (b *Blob) Hash() string {
-    panic("Not implemented")
+// Returns the SHA-1 hash for the given file.
+func (b *Blob) Hash() (string, error) {
+    if b.hash != "" {
+        return b.hash, nil
+    }
+    
+    fileContents, err := os.ReadFile(b.FilePath)
+    if err != nil {
+        return "", errors.NewBlobError(fmt.Sprintf("Error while reading file for hash creation: %v", b.FilePath))
+    }
+    
+    hasher := sha1.New()
+    _, err = hasher.Write(fileContents)
+    if err != nil {
+        return "", errors.NewBlobError(fmt.Sprintf("Error while writing hash for file: %v", b.FilePath))
+    }
+    hashString := hex.EncodeToString(hasher.Sum(nil))
+    b.hash = hashString
+
+    return hashString, nil
 }
 
 // Returns the compressed contents of the blob object.

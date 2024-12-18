@@ -41,6 +41,7 @@ func Init() error {
     return nil
 }
 
+// UNFINISHED
 func Add(filePath string) error {
     blob := objects.NewBlob(filePath, objects.FILE)
     compressedData, err := blob.Contents()
@@ -48,6 +49,8 @@ func Add(filePath string) error {
         return errors.NewAddError(fmt.Sprintf("Error while adding file [%v]: %v", filePath, err.Error()), filePath)
     }
     fmt.Println(compressedData)
+    hash, err := blob.Hash()
+    fmt.Println(hash)
 
     return nil
 }
