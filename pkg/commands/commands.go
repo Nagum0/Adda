@@ -2,6 +2,7 @@ package commands
 
 import (
 	"adda/pkg/errors"
+	"adda/pkg/objects"
 	"fmt"
 	"os"
 )
@@ -40,6 +41,12 @@ func Init() error {
     return nil
 }
 
-func Add() {
-
+func Add(filePath string) error {
+    blob := objects.NewBlob(filePath, objects.FILE)
+    _, err := blob.GenerateContents()
+    if err != nil {
+        fmt.Println(err.Error())
+    }
+    fmt.Println(blob.Contents)
+    return nil
 }

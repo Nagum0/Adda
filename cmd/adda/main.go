@@ -21,9 +21,15 @@ func main() {
             fmt.Println(err.Error())
             os.Exit(1)
         }
+
         break
     case "add":
-        fmt.Println("ADD")
+        err := commands.Add(args[1])
+        if err != nil {
+            fmt.Println(err.Error())
+            os.Exit(1)
+        }
+
         break
     case "commit":
         fmt.Println("COMMIT")
