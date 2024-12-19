@@ -30,7 +30,7 @@ func NewBlob(filePath string, fileType FileType) *Blob {
     }
 }
 
-// Returns the SHA-1 hash for the given file.
+// Internally sets the SHA-1 hash for the blob object and returns the hash.
 func (b *Blob) Hash() (string, error) {
     if b.hash != "" {
         return b.hash, nil
@@ -52,7 +52,8 @@ func (b *Blob) Hash() (string, error) {
     return hashString, nil
 }
 
-// Returns the compressed contents of the blob object.
+// Internally sets the contents of the blob object if we call this for the first time and 
+// returns the compressed contents.
 func (b *Blob) Contents() ([]byte, error) {
     if b.contents != nil {
         return b.contents, nil
@@ -76,4 +77,36 @@ func (b *Blob) Contents() ([]byte, error) {
     b.contents = bytes
 
     return bytes, nil
+}
+
+// Writes the blob object to the filesystem.
+func (b *Blob) WriteBlob() error {
+    hash, err := b.Hash()
+    if err != nil {
+        return err
+    }
+
+    // Creating the hash directory
+    hashDir := hash[:2]
+    err = os.Mkdir(".adda/objects/" + hashDir, os.ModePerm)
+    if err != nil {
+        return errors.NewBlobError(fmt.Sprintf("Error while creating hash directory: %v", err.Error()))
+    }
+
+    // Writing blob to a file
+    hashFile := hash[2:]
+    file, err := os.Create(".adda/objects/" + hashDir + "/" + hashFile)
+    if err != nil {
+        return errors.NewAddError(fmt.Sprintf("Error while creating blob file: %v", err.Error()), b.FilePath)
+    }
+    defer file.Close()
+
+    contents, err := b.Contents()
+    if err != nil {
+        return err
+    }
+
+    file.Write(contents)
+
+    return nil
 }

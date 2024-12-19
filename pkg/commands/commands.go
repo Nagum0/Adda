@@ -41,16 +41,13 @@ func Init() error {
     return nil
 }
 
-// UNFINISHED
+// Hash: 170...
 func Add(filePath string) error {
     blob := objects.NewBlob(filePath, objects.FILE)
-    compressedData, err := blob.Contents()
+    err := blob.WriteBlob()
     if err != nil {
-        return errors.NewAddError(fmt.Sprintf("Error while adding file [%v]: %v", filePath, err.Error()), filePath)
+        return errors.NewAddError(err.Error(), filePath)
     }
-    fmt.Println(compressedData)
-    hash, err := blob.Hash()
-    fmt.Println(hash)
 
     return nil
 }
