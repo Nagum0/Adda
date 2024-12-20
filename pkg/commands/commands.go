@@ -2,6 +2,7 @@ package commands
 
 import (
 	"adda/pkg/errors"
+	"adda/pkg/index"
 	"adda/pkg/objects"
 	"fmt"
 	"os"
@@ -41,13 +42,23 @@ func Init() error {
     return nil
 }
 
-// Hash: 170...
+// Generate a blob object and write it to the filesystem.
+// The blob object will be created at .adda/objects/<hash_begin>/<hash_rest>.
+// This will also update the INDEX and map the hash of the file to the filepath.
 func Add(filePath string) error {
     blob := objects.NewBlob(filePath, objects.FILE)
+
     err := blob.WriteBlob()
     if err != nil {
         return errors.NewAddError(err.Error(), filePath)
     }
+
+    indexFile, err := index.ParseIndex()
+    if err != nil {
+        return errors.NewAddError(err.Error(), filePath)
+    }
+
+    indexFile.Update(*blob)  
 
     return nil
 }
