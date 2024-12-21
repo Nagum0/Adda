@@ -88,9 +88,13 @@ func (b *Blob) WriteBlob() error {
 
     // Creating the hash directory
     hashDir := hash[:2]
-    err = os.Mkdir(".adda/objects/" + hashDir, os.ModePerm)
-    if err != nil {
-        return errors.NewBlobError(fmt.Sprintf("Error while creating hash directory: %v", err.Error()))
+    _, err = os.Stat(".adda/objects/" + hashDir)
+    
+    // If the hashDir doesn't exists create it
+    if os.IsNotExist(err) {
+        if err = os.Mkdir(".adda/objects/" + hashDir, os.ModePerm); err != nil {
+            return errors.NewBlobError(fmt.Sprintf("Error while creating hash directory: %v", err.Error()))
+        }
     }
 
     // Writing blob to a file

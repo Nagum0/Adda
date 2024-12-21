@@ -47,8 +47,16 @@ func Init() error {
 // This will also update the INDEX and map the hash of the file to the filepath.
 func Add(filePath string) error {
     blob := objects.NewBlob(filePath, objects.FILE)
+    hash, err := blob.Hash()
+    if err != nil {
+        return errors.NewAddError(err.Error(), filePath)
+    }
 
-    err := blob.WriteBlob()
+    if hashExists(hash) {
+        return nil
+    }
+
+    err = blob.WriteBlob()
     if err != nil {
         return errors.NewAddError(err.Error(), filePath)
     }
@@ -58,7 +66,23 @@ func Add(filePath string) error {
         return errors.NewAddError(err.Error(), filePath)
     }
 
-    indexFile.Update(*blob)  
+    err = indexFile.Update(*blob)
+    if err != nil {
+        return errors.NewAddError(err.Error(), filePath)
+    }
 
     return nil
+}
+
+// Checks whether the given hash already exists in the object database.
+func hashExists(hash string) bool {
+    hashPath := ".adda/objects/" + hash[:2] + "/" + hash[2:]
+    fmt.Println(hashPath)   
+
+    _, err := os.Stat(hashPath)
+    if os.IsNotExist(err) {
+        return false
+    }
+
+    return true
 }

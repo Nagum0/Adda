@@ -24,6 +24,11 @@ type Index struct {
 
 // Parses the INDEX file and retuns a pointer to the Index object.
 func ParseIndex() (*Index, error) {
+    // indexFile, err := os.ReadFile(".adda/INDEX")
+    // if err != nil {
+    //     return nil, nil
+    // }
+
     return nil, nil
 }
 

@@ -11,7 +11,7 @@ func NewInitError(msg string) *InitError {
 }
 
 func (e *InitError) Error() string {
-    return e.msg
+    return "[INIT ERROR] " + e.msg
 }
 
 // Error representing a failure during adding a file to the stagin area (INDEX).
@@ -26,7 +26,7 @@ func NewAddError(msg string, filePath string) *AddError {
 }
 
 func (e *AddError) Error() string {
-    return e.msg
+    return "[ADD ERROR] " + e.msg
 }
 
 // Error representing a failure during blob object creation.
@@ -40,5 +40,19 @@ func NewBlobError(msg string) *BlobError {
 }
 
 func (e *BlobError) Error() string {
-    return e.msg
+    return "[BLOB ERROR] " + e.msg
+}
+
+// Error representing failure during work with the INDEX file.
+type IndexError struct {
+    msg string
+}
+
+// Creates a new IndexError.
+func NewIndexError(msg string) *IndexError {
+    return &IndexError{ msg: msg }
+}
+
+func (e *IndexError) Error() string {
+    return "[INDEX ERROR] " + e.msg
 }
