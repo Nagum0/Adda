@@ -77,7 +77,6 @@ func Add(filePath string) error {
 // Checks whether the given hash already exists in the object database.
 func hashExists(hash string) bool {
     hashPath := ".adda/objects/" + hash[:2] + "/" + hash[2:]
-    fmt.Println(hashPath)   
 
     _, err := os.Stat(hashPath)
     if os.IsNotExist(err) {

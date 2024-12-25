@@ -52,7 +52,6 @@ func ParseIndex() (*Index, error) {
 
     indexFileLines := strings.Split(indexFileString, "\n")
     indexFileLines = indexFileLines[:len(indexFileLines ) - 1]
-    fmt.Println(" -- TESTING: ", indexFileLines)
     indexObject := Index{ make(map[string]Entry) }
     
     for _, entry := range indexFileLines {
