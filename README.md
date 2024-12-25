@@ -5,6 +5,16 @@
 
 ## Commands
 
+### Init
+
+- Intializes an Adda repository.
+- Usage:
+``` bash
+adda init
+```
+- Details:
+  - Creates the .adda/ directory and the objects/, branches/, refs/, refs/heads/, subdirectories and the INDEX and HEAD files.
+
 ### Add
 
 - Adds a file to the stagin area.
