@@ -32,7 +32,11 @@ func main() {
 
         break
     case "commit":
-        fmt.Println("COMMIT")
+        if err := commands.Commit(args[1]); err != nil {
+            fmt.Println(err.Error())
+            os.Exit(1)
+        }
+
         break
     default:
         fmt.Println("Unknown command: ", args[0])

@@ -2,7 +2,6 @@ package commands
 
 import (
 	"adda/pkg/errors"
-	"adda/pkg/index"
 	"adda/pkg/objects"
 	"fmt"
 	"os"
@@ -61,7 +60,7 @@ func Add(filePath string) error {
         return errors.NewAddError(err.Error(), filePath)
     }
 
-    indexFile, err := index.ParseIndex()
+    indexFile, err := objects.ParseIndex()
     if err != nil {
         return errors.NewAddError(err.Error(), filePath)
     }
@@ -84,4 +83,15 @@ func hashExists(hash string) bool {
     }
 
     return true
+}
+
+func Commit(msg string) error {
+    tree, err := objects.CreateTree() 
+    if err != nil {
+        fmt.Println(err.Error())
+    }
+
+    fmt.Println(tree.String())
+
+    return nil
 }

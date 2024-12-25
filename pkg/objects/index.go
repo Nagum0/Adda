@@ -1,8 +1,7 @@
-package index
+package objects
 
 import (
 	"adda/pkg/errors"
-	"adda/pkg/objects"
 	"fmt"
 	"os"
 	"strconv"
@@ -13,7 +12,7 @@ import (
 type Entry struct {
     FilePath string
     Hash     string
-    FileType objects.FileType
+    FileType FileType
 }
 
 func (e Entry) String() string {
@@ -66,7 +65,7 @@ func ParseIndex() (*Index, error) {
         entryObject := Entry {
             FilePath: filePath,
             Hash: splitEntry[1],
-            FileType: objects.FileType(fileType),
+            FileType: FileType(fileType),
         }
 
         indexObject.Entries[filePath] = entryObject
@@ -77,7 +76,7 @@ func ParseIndex() (*Index, error) {
 
 // Updates the INDEX file. If the file path already exists in the INDEX 
 // it will only change the hash of the file.
-func (index *Index) Update(blob objects.Blob) error {
+func (index *Index) Update(blob Blob) error {
     // When calling this function the hash should already be generated
     hash, _ := blob.Hash()
     

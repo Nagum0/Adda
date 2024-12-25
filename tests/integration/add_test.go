@@ -2,7 +2,6 @@ package tests
 
 import (
 	"adda/pkg/commands"
-	"adda/pkg/index"
 	"adda/pkg/objects"
 	"fmt"
 	"os"
@@ -48,7 +47,7 @@ func TestAddNewFile(t *testing.T) {
         }
     }
 
-    indexFile, err := index.ParseIndex()
+    indexFile, err := objects.ParseIndex()
     if err != nil {
         t.Error(err.Error())
     }
@@ -88,7 +87,7 @@ func TestAddChangedFile(t *testing.T) {
         t.Error(err.Error())
     }
 
-    indexFile, err := index.ParseIndex()
+    indexFile, err := objects.ParseIndex()
     if err != nil {
         t.Error(err.Error())
     }
@@ -112,7 +111,7 @@ func TestAddChangedFile(t *testing.T) {
         t.Error(err.Error())
     }
 
-    indexFile, err = index.ParseIndex()
+    indexFile, err = objects.ParseIndex()
     if err != nil {
         t.Error(err.Error())
     }
