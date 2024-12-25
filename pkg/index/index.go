@@ -93,7 +93,7 @@ func (index *Index) Update(blob objects.Blob) error {
         return errors.NewIndexError("Error while updating the INDEX.")
     }
     defer indexFile.Close()
-    indexFile.WriteString(index.String())
+    indexFile.Write([]byte(index.String()))
 
     return nil
 }
