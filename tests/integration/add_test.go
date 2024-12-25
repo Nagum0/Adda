@@ -9,6 +9,7 @@ import (
 	"testing"
 )
 
+// Checks whether the addition of files to the staging area works as intended.
 func TestAddNewFile(t *testing.T) {
     files := map[string]string{
         "test1.txt": "Hello, World!",
@@ -63,6 +64,60 @@ func TestAddNewFile(t *testing.T) {
     }
 }
 
+// Check whether the INDEX file correctly changed the hash pointing to the blob object of the added file 
+// after the file was modified and readded.
 func TestAddChangedFile(t *testing.T) {
+    defer os.RemoveAll(".adda")
+    defer os.Remove("test.txt")
 
+    if err := commands.Init(); err != nil {
+        t.Error(err.Error())
+    }
+
+    testFile, err := os.Create("test.txt") 
+    if err != nil {
+        t.Error(err.Error())
+    }
+    testFile.WriteString(Lorem1)
+    testFile.Close()
+
+    blob := objects.NewBlob("test.txt", objects.FILE)
+    hash, _ := blob.Hash()
+
+    if err := commands.Add("test.txt"); err != nil {
+        t.Error(err.Error())
+    }
+
+    indexFile, err := index.ParseIndex()
+    if err != nil {
+        t.Error(err.Error())
+    }
+    
+    if h := indexFile.Entries["test.txt"].Hash; h != hash {
+        t.Errorf("Expected hash: %v, received: %v", hash, h)
+    }
+    
+    // Changing the test file
+    testFile, err = os.OpenFile("test.txt", os.O_WRONLY, 0644)
+    if err != nil {
+        t.Error(err.Error())
+    }
+    testFile.WriteString(Lorem2)
+    testFile.Close()
+
+    blob = objects.NewBlob("test.txt", objects.FILE)
+    hash, _ = blob.Hash()
+    
+    if err := commands.Add("test.txt"); err != nil {
+        t.Error(err.Error())
+    }
+
+    indexFile, err = index.ParseIndex()
+    if err != nil {
+        t.Error(err.Error())
+    }
+    
+    if h := indexFile.Entries["test.txt"].Hash; h != hash {
+        t.Errorf("Expected hash: %v, received: %v", hash, h)
+    }
 }
