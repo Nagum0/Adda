@@ -86,7 +86,7 @@ func hashExists(hash string) bool {
 }
 
 func Commit(msg string) error {
-    tree, err := objects.CreateTree() 
+    tree, err := objects.IndexToTree() 
     if err != nil {
         fmt.Println(err.Error())
     }

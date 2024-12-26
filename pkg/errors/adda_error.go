@@ -56,3 +56,18 @@ func NewIndexError(msg string) *IndexError {
 func (e *IndexError) Error() string {
     return "[INDEX ERROR] " + e.msg
 }
+
+// Error representing failure during work with the tree object.
+type TreeError struct {
+    msg string
+}
+
+// Creates a new TreeError.
+func NewTreeError(msg string) *TreeError {
+    return &TreeError{ msg: msg }
+}
+
+func (e *TreeError) Error() string {
+    return "[TREE ERROR] " + e.msg
+}
+
