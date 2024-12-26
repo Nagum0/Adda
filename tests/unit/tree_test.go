@@ -141,9 +141,18 @@ func TestAppendFile(t *testing.T) {
 }
 
 func TestContainsChild(t *testing.T) {
+    root := objects.NewNode(".")
+    root.AppendNode("sub", ".")
+    root.AppendNode("dub", ".")
+    root.AppendNode("gus", "sub")
+    root.AppendNode("foo", "dub")
+    root.AppendNode("bar", "gus")
+    
+    if !root.ContainsChild("sub") {
+        t.Error("sub is the child of root")
+    }
 
-}
-
-func TestIndexToTree(t *testing.T) {
-
+    if root.ContainsChild("gus") {
+        t.Error("gus is not the child of root")
+    }
 }
