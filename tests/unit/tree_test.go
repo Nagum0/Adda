@@ -121,7 +121,23 @@ func TestAppendNode(t *testing.T) {
 }
 
 func TestAppendFile(t *testing.T) {
+    root := objects.NewNode(".")
+    root.AppendNode("sub", ".")
+    root.AppendNode("dub", ".")
+    root.AppendFile("sub", "f.txt")
+    root.AppendFile("dub", "f1.txt")
+    root.AppendFile("dub", "f2.txt")
 
+    sub, _ := root.GetNode("sub")
+    dub, _ := root.GetNode("dub")
+    
+    if len(sub.Files) == 1 && sub.Files[0] != "f.txt" {
+        t.Errorf("Expected [f.txt]; Received: %v", sub.Files)
+    }
+
+    if len(dub.Files) == 2 && (dub.Files[0] != "f1.txt" || dub.Files[1] != "f2.txt") {
+        t.Errorf("Expected [f1.txt f2.txt]; Received: %v", dub.Files)
+    }
 }
 
 func TestContainsChild(t *testing.T) {
