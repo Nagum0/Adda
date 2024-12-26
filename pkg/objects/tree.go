@@ -102,12 +102,16 @@ func (node Node) GetNode(dir string) (*Node, error) {
     if node.Path == dir {
         return &node, nil
     }
-
+    
     for _, child := range node.Children {
-        return child.GetNode(dir)
+        if n, err := child.GetNode(dir); err != nil {
+            continue
+        } else {
+            return n, nil
+        }
     }
 
-    return nil, errors.NewTreeError(fmt.Sprintf("Node: %v not found.", dir))
+    return nil, errors.NewTreeError(fmt.Sprintf("Node %v not found.", dir))
 }
 
 func (node Node) String() string {
