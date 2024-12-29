@@ -71,3 +71,17 @@ func (e *TreeError) Error() string {
     return "[TREE ERROR] " + e.msg
 }
 
+// Error representing failure during a commit.
+type CommitError struct {
+    msg string
+}
+
+// Creates a new CommitError.
+func NewCommitError(msg string) *CommitError {
+    return &CommitError{ msg: msg }
+}
+
+func (e *CommitError) Error() string {
+    return "[COMMIT ERROR] " + e.msg
+}
+

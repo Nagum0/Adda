@@ -85,13 +85,22 @@ func hashExists(hash string) bool {
     return true
 }
 
+// Creates a commit object and writes it to the object database. Also sets the 
+// refs/heads/<current branch> to the new commit object's hash.
 func Commit(msg string) error {
-    tree, err := objects.IndexToTree() 
+    indexFile, err := objects.ParseIndex()
     if err != nil {
-        fmt.Println(err.Error())
+        return errors.NewCommitError(err.Error())
     }
 
-    fmt.Println(tree.String())
+    tree, err := objects.IndexToTree(*indexFile) 
+    if err != nil {
+        return err
+    }
+
+    fmt.Println("Tree: ", tree.String())
+
+    objects.CreateTreeObject(*tree, *indexFile)
 
     return nil
 }

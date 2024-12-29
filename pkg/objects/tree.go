@@ -25,14 +25,26 @@ func NewNode(Path string) *Node {
     }
 }
 
-// Parses the INDEX file into a tree. If it fails it will return an IndexError.
-func IndexToTree() (*Node, error) {
-    root := Node{ Path: ".", Files: make([]string, 0), Children: make([]*Node, 0) }
+// Create the tree object and write it to the object database.
+// TODO:
+//   - Hash for tree object
+//   - Write the tree object to the database
+//   - Repeat for the children
+func CreateTreeObject(tree Node, indexFile Index) error {
 
-    indexFile, err := ParseIndex()
-    if err != nil {
-        return nil, err
-    }
+    return nil
+}
+
+// Creates a single node into a tree object file.
+func (node Node) ToTreeObject(index Index) string {
+    result := ""
+    
+    return result
+}
+
+// Parses the INDEX file into a tree. If it fails it will return an IndexError.
+func IndexToTree(indexFile Index) (*Node, error) {
+    root := Node{ Path: ".", Files: make([]string, 0), Children: make([]*Node, 0) }
 
     for _, entry := range indexFile.Entries {
         dirs := strings.Split(entry.FilePath, "/")

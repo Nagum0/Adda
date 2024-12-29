@@ -95,3 +95,14 @@ func (index *Index) Update(blob Blob) error {
 
     return nil
 }
+
+// Tries to get the hash of the given file path. If the file is not included in the index
+// it will return an IndexError.
+func (index Index) GetBlobHash(filePath string) (string, error) {
+    entry, ok := index.Entries[filePath]
+    if !ok {
+        return "", errors.NewIndexError(fmt.Sprintf("File path: %v is not found in the INDEX", filePath))
+    }
+
+    return entry.Hash, nil
+}
