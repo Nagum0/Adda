@@ -92,8 +92,13 @@ func Commit(msg string) error {
     if err != nil {
         return errors.NewCommitError(err.Error())
     }
+    
+    rootHash, err := objects.IndexToTree(*indexFile)
+    if err != nil {
+        return errors.NewCommitError(err.Error())
+    }
 
-    fmt.Println(indexFile.String())
+    fmt.Println(rootHash)
     
     return nil
 }
