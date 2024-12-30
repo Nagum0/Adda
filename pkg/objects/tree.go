@@ -23,70 +23,62 @@ func NewTreeObject() *TreeObject {
 func IndexToTree(indexFile Index) (string, error) {
     fmt.Println("INDEX:\n" + indexFile.String())
     
+    // Map the directory names to tree objects
     trees := map[string]TreeObject{
         ".": *NewTreeObject(),
     }
 
     for _, entry := range indexFile.Entries {
         dirs := strings.Split(entry.FilePath, "/")
-        fmt.Println(dirs)
-        
-        // This means that this is a file at the root
-        if len(dirs) == 1 {
-            root := trees["."]
-            root.Files = append(root.Files, dirs[0])
-            trees["."] = root
-        // This means that we are one subdirectory deep from the root
-        } else if len(dirs) == 2 {
-            // Appending the subdirectory as the child of the root directory
-            root := trees["."]
-            root.Children = append(root.Children, dirs[0])
-            trees["."] = root
-            
-            // Appending the file to the subdirectory and create the subdirectory if it doesn't exist
-            dir, ok := trees[dirs[0]]
-            if !ok {
-                dirTree := NewTreeObject()
-                dirTree.Files = append(dirTree.Files, dirs[1])
-                trees[dirs[0]] = *dirTree
-            } else {
-                dir.Files = append(dir.Files, dirs[1])
-                trees[dirs[0]] = dir
-            }
-        // The file is deeply nested
-        } else {
-            currentDir := "."
+        currentDir := "."
 
-            // [sub dub file2.txt]
-            for i := 0; i < len(dirs) - 1; i++ {
-                nextDir := dirs[i]
+        for i := 0; i < len(dirs) - 1; i++ {
+            nextDir := dirs[i]
 
-                if _, ok := trees[nextDir]; !ok {
-                    trees[nextDir] = *NewTreeObject()   
-                }
-
-                // Add the nextDir to the currentDir as a child if it doesn't already contain it
-                if currentDirTree := trees[currentDir]; !contains(currentDirTree.Children, nextDir) {
-                    currentDirTree.Children = append(currentDirTree.Children, nextDir)
-                    trees[currentDir] = currentDirTree
-                }
-
-                currentDir = nextDir
+            if _, ok := trees[nextDir]; !ok {
+                trees[nextDir] = *NewTreeObject()   
             }
 
-            fileName := dirs[len(dirs) - 1]
-            currentDirTree := trees[currentDir]
-            currentDirTree.Files = append(currentDirTree.Files, fileName)
-            trees[currentDir] = currentDirTree
+            // Add the nextDir to the currentDir as a child if it doesn't already contain it
+            if currentDirTree := trees[currentDir]; !contains(currentDirTree.Children, nextDir) {
+                currentDirTree.Children = append(currentDirTree.Children, nextDir)
+                trees[currentDir] = currentDirTree
+            }
+
+            currentDir = nextDir
         }
 
+        fileName := dirs[len(dirs) - 1]
+        currentDirTree := trees[currentDir]
+        currentDirTree.Files = append(currentDirTree.Files, fileName)
+        trees[currentDir] = currentDirTree
     }
-    
+
     for key, val := range trees {
         fmt.Printf("%v:\n  %v\n  %v\n", key, val.Files, val.Children)
     }
 
+    // Map the directory names to tree hashes
+    treeHashes := map[string]string{}
+    generateTreeHash(trees, ".", &treeHashes)
+    
+    for k, v := range treeHashes {
+        fmt.Printf("%v -> %v\n", k, v)
+    }
+
+    // When we have the hashes and the contents we make a snapshot thingy !!!
+    
     return "nutin", nil
+}
+
+func generateTreeHash(trees map[string]TreeObject, dirName string, treeHashes *map[string]string) {
+    for _, child := range trees[dirName].Children {
+        if _, ok := (*treeHashes)[child]; !ok {
+            generateTreeHash(trees, child, treeHashes)
+        }
+    }
+    
+    (*treeHashes)[dirName] = "<hash>"
 }
 
 func contains[T comparable](xs []T, x T) bool {
