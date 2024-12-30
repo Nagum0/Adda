@@ -40,6 +40,7 @@ func NewTreeObject(dirName string) *TreeObject {
     }
 }
 
+// Checks whether the tree object contains the given directory name as one of it's subdirectories.
 func (tree TreeObject) ContainsSubDir(dirName string) bool {
     for _, subDir := range tree.SubDirs {
         if dirName == subDir.DirName {
@@ -51,22 +52,18 @@ func (tree TreeObject) ContainsSubDir(dirName string) bool {
 }
 
 // Snapshot of the directory structure at the time of a given commit. 
-type Snapshot struct {
-    // The directories of the snapshot.
-    Dirs map[string]TreeObject
+// Maps the directory names to tree objects.
+type Snapshot map[string]TreeObject
+
+func NewSnapshot() *map[string]TreeObject {
+    return &map[string]TreeObject{}
 }
 
-func NewSnapshot() *Snapshot {
-    return &Snapshot {
-        Dirs: make(map[string]TreeObject, 0),
-    }
-}
-
-func IndexToTree(indexFile Index) (string, error) {
+func TakeSnapshot(indexFile Index) Snapshot {
     fmt.Println("INDEX:\n" + indexFile.String())
     
     snapshot := *NewSnapshot()
-    snapshot.Dirs["."] = *NewTreeObject(".")
+    snapshot["."] = *NewTreeObject(".")
     
     for _, entry := range indexFile.Entries {
         dirs := strings.Split(entry.FilePath, "/")
@@ -75,40 +72,30 @@ func IndexToTree(indexFile Index) (string, error) {
         for i := 0; i < len(dirs) - 1; i++ {
             nextDir := dirs[i]
 
-            if _, ok := snapshot.Dirs[nextDir]; !ok {
-                snapshot.Dirs[nextDir] = *NewTreeObject(nextDir)
+            if _, ok := snapshot[nextDir]; !ok {
+                snapshot[nextDir] = *NewTreeObject(nextDir)
             }
 
             // Add the nextDir to the currentDir as a child if it doesn't already contain it
-            if currentDirTree := snapshot.Dirs[currentDir]; !currentDirTree.ContainsSubDir(nextDir) {
+            if currentDirTree := snapshot[currentDir]; !currentDirTree.ContainsSubDir(nextDir) {
                 currentDirTree.SubDirs = append(currentDirTree.SubDirs, *NewTreeObject(nextDir))
-                snapshot.Dirs[currentDir] = currentDirTree
+                snapshot[currentDir] = currentDirTree
             }
 
             currentDir = nextDir
         }
 
         fileName := dirs[len(dirs) - 1]
-        currentDirTree := snapshot.Dirs[currentDir]
+        currentDirTree := snapshot[currentDir]
         currentDirTree.Blobs = append(currentDirTree.Blobs, *NewTreeBlob(fileName, entry.Hash))
-        snapshot.Dirs[currentDir] = currentDirTree
+        snapshot[currentDir] = currentDirTree
     }
 
-    for dirName, tree := range snapshot.Dirs {
+    for dirName, tree := range snapshot {
         fmt.Printf("%v:\n  %v\n  %v\n", dirName, tree.Blobs, tree.SubDirs)
     }
-
-    // // Map the directory names to tree hashes
-    // treeHashes := map[string]string{}
-    // generateTreeHash(snapshot.Dirs, ".", &treeHashes)
-    // 
-    // for k, v := range treeHashes {
-    //     fmt.Printf("%v -> %v\n", k, v)
-    // }
-
-    // When we have the hashes and the contents we make a snapshot thingy !!!
-    
-    return "nutin", nil
+        
+    return snapshot
 }
 
 // func generateTreeHash(trees map[string]Snapshot, dirName string, treeHashes *map[string]string) {
@@ -120,13 +107,3 @@ func IndexToTree(indexFile Index) (string, error) {
 //     
 //     (*treeHashes)[dirName] = "<hash>"
 // }
-
-func contains[T comparable](xs []T, x T) bool {
-    for _, val := range xs {
-        if x == val {
-            return true
-        }
-    }
-
-    return false
-}

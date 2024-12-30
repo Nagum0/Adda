@@ -93,12 +93,9 @@ func Commit(msg string) error {
         return errors.NewCommitError(err.Error())
     }
     
-    rootHash, err := objects.IndexToTree(*indexFile)
-    if err != nil {
-        return errors.NewCommitError(err.Error())
-    }
+    snapshot := objects.TakeSnapshot(*indexFile)
 
-    fmt.Println(rootHash)
+    fmt.Println("\nSnapshot:\n", snapshot)
     
     return nil
 }
