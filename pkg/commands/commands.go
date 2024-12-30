@@ -93,14 +93,7 @@ func Commit(msg string) error {
         return errors.NewCommitError(err.Error())
     }
 
-    tree, err := objects.IndexToTree(*indexFile) 
-    if err != nil {
-        return err
-    }
-
-    fmt.Println("Tree: ", tree.String())
-
-    objects.CreateTreeObject(*tree, *indexFile)
-
+    fmt.Println(indexFile.String())
+    
     return nil
 }
