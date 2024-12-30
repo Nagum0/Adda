@@ -1,6 +1,7 @@
 package objects
 
 import (
+	"crypto/sha1"
 	"fmt"
 	"strings"
 )
@@ -51,6 +52,20 @@ func (tree TreeObject) ContainsSubDir(dirName string) bool {
     return false
 }
 
+func (tree TreeObject) String() string {
+    s := ""
+    
+    for _, blob := range tree.Blobs {
+        s += fmt.Sprintf("0 %v\t%v", blob.Hash, blob.FileName)
+    }
+
+    for _, subDir := range tree.SubDirs {
+        s += fmt.Sprintf("1 %v\t%v", subDir.Hash, subDir.DirName)
+    }
+
+    return s
+}
+
 // Snapshot of the directory structure at the time of a given commit. 
 // Maps the directory names to tree objects.
 type Snapshot map[string]TreeObject
@@ -91,19 +106,23 @@ func TakeSnapshot(indexFile Index) Snapshot {
         snapshot[currentDir] = currentDirTree
     }
 
+    generateTreeHashes(snapshot, ".")
+
     for dirName, tree := range snapshot {
-        fmt.Printf("%v:\n  %v\n  %v\n", dirName, tree.Blobs, tree.SubDirs)
+        fmt.Printf("%v -> %v:\n  %v\n  %v\n", dirName, tree.Hash, tree.Blobs, tree.SubDirs)
     }
         
     return snapshot
 }
 
-// func generateTreeHash(trees map[string]Snapshot, dirName string, treeHashes *map[string]string) {
-//     for _, child := range trees[dirName].Dirs {
-//         if _, ok := (*treeHashes)[child]; !ok {
-//             generateTreeHash(trees, child, treeHashes)
-//         }
-//     }
-//     
-//     (*treeHashes)[dirName] = "<hash>"
-// }
+func generateTreeHashes(snapshot Snapshot, dirName string) {
+    for _, subDir := range snapshot[dirName].SubDirs {
+        if subDir.Hash == "" {
+            generateTreeHashes(snapshot, subDir.DirName)
+        }
+    }
+    
+    tree := snapshot[dirName]
+    tree.Hash = fmt.Sprintf("%x", sha1.Sum([]byte(tree.String())))
+    snapshot[dirName] = tree
+}
