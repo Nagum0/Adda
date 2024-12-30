@@ -3,6 +3,7 @@ package objects
 import (
 	"crypto/sha1"
 	"fmt"
+	"sort"
 	"strings"
 )
 
@@ -52,6 +53,7 @@ func (tree TreeObject) ContainsSubDir(dirName string) bool {
     return false
 }
 
+// Parse tree object into a string. Tree object format: <object type> <hash> <file/directory name>.
 func (tree TreeObject) String() string {
     s := ""
     
@@ -75,8 +77,6 @@ func NewSnapshot() *map[string]TreeObject {
 }
 
 func TakeSnapshot(indexFile Index) Snapshot {
-    fmt.Println("INDEX:\n" + indexFile.String())
-    
     snapshot := *NewSnapshot()
     snapshot["."] = *NewTreeObject(".")
     
@@ -108,21 +108,28 @@ func TakeSnapshot(indexFile Index) Snapshot {
 
     generateTreeHashes(snapshot, ".")
 
-    for dirName, tree := range snapshot {
-        fmt.Printf("%v -> %v:\n  %v\n  %v\n", dirName, tree.Hash, tree.Blobs, tree.SubDirs)
-    }
-        
     return snapshot
 }
 
+// Generate the hashes for the tree objects in the given snapshot.
 func generateTreeHashes(snapshot Snapshot, dirName string) {
     for _, subDir := range snapshot[dirName].SubDirs {
         if subDir.Hash == "" {
             generateTreeHashes(snapshot, subDir.DirName)
         }
     }
-    
+
     tree := snapshot[dirName]
+
+    // Sort the tree blobs (by file name) and sub directories (by directory name) for consistent hashing
+    sort.Slice(tree.Blobs, func(i, j int) bool {
+        return tree.Blobs[i].FileName < tree.Blobs[j].FileName
+    })
+
+    sort.Slice(tree.SubDirs, func(i, j int) bool {
+        return tree.SubDirs[i].DirName < tree.SubDirs[j].DirName
+    })
+
     tree.Hash = fmt.Sprintf("%x", sha1.Sum([]byte(tree.String())))
     snapshot[dirName] = tree
 }
