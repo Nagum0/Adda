@@ -53,6 +53,17 @@ func (tree TreeObject) ContainsSubDir(dirName string) bool {
     return false
 }
 
+// Checks whether the tree object contains the given file name as one of it's blob objects.
+func (tree TreeObject) ContainsBlobFile(fileName string) bool {
+    for _, blob := range tree.Blobs {
+        if blob.FileName == fileName {
+            return true
+        }
+    }
+
+    return false
+}
+
 // Parse tree object into a string. Tree object format: <object type> <hash> <file/directory name>.
 func (tree TreeObject) String() string {
     s := ""
@@ -76,6 +87,7 @@ func NewSnapshot() *map[string]TreeObject {
     return &map[string]TreeObject{}
 }
 
+// Takes a snapshot of the current directory structure of the staged files and retuns a Snaphot.
 func TakeSnapshot(indexFile Index) Snapshot {
     snapshot := *NewSnapshot()
     snapshot["."] = *NewTreeObject(".")
