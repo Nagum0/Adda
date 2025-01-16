@@ -94,11 +94,7 @@ func Commit(msg string) error {
     }
     
     snapshot := objects.TakeSnapshot(*indexFile)
-
-    for dirName, tree := range snapshot {
-        fmt.Printf("%v -> %v:\n  %v\n  %v\n", dirName, tree.Hash, tree.Blobs, tree.SubDirs)
-    }
-
+    fmt.Println(snapshot)
     
     return nil
 }
