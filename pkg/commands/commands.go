@@ -51,7 +51,7 @@ func Add(filePath string) error {
         return errors.NewAddError(err.Error(), filePath)
     }
 
-    if hashExists(hash) {
+    if objects.HashExists(hash) {
         return nil
     }
 
@@ -73,18 +73,6 @@ func Add(filePath string) error {
     return nil
 }
 
-// Checks whether the given hash already exists in the object database.
-func hashExists(hash string) bool {
-    hashPath := ".adda/objects/" + hash[:2] + "/" + hash[2:]
-
-    _, err := os.Stat(hashPath)
-    if os.IsNotExist(err) {
-        return false
-    }
-
-    return true
-}
-
 // Creates a commit object and writes it to the object database. Also sets the 
 // refs/heads/<current branch> to the new commit object's hash.
 func Commit(msg string) error {
@@ -94,7 +82,9 @@ func Commit(msg string) error {
     }
     
     snapshot := objects.TakeSnapshot(*indexFile)
-    fmt.Println(snapshot)
+    if err = snapshot.WriteSnapshotToDatabase(); err != nil {
+        return errors.NewCommitError(err.Error())
+    }
     
     return nil
 }

@@ -1,8 +1,12 @@
 package objects
 
 import (
+	"adda/pkg/errors"
+	"bytes"
+	"compress/zlib"
 	"crypto/sha1"
 	"fmt"
+	"os"
 	"sort"
 	"strings"
 )
@@ -122,6 +126,42 @@ func TakeSnapshot(indexFile Index) Snapshot {
     generateTreeHashes(snapshot, ".")
     
     return snapshot
+}
+
+// Writes the snapshot's tree objects to the object database (zlib compression).
+func (s Snapshot) WriteSnapshotToDatabase() error {
+    for _, treeObject := range s {
+        if HashExists(treeObject.Hash) {
+            continue
+        }
+        
+        treeString := treeObject.String()
+        buffer := bytes.Buffer{}
+        writer := zlib.NewWriter(&buffer)
+        if _, err := writer.Write([]byte(treeString)); err != nil {
+            return errors.NewCommitError("Error while writing the snapshot to the object database.")
+        }
+        writer.Close()
+
+        hashPrefix := treeObject.Hash[:2]
+        hashDirPath := ".adda/objects/" + hashPrefix + "/"
+        _, err := os.Stat(hashDirPath)
+        if os.IsNotExist(err) {
+            if err := os.Mkdir(hashDirPath, os.ModePerm); err != nil {
+                return errors.NewCommitError(fmt.Sprintf("Error while creating hash directory for tree object: %v", treeObject.DirName))
+            }
+        }
+
+        hashFilePath := ".adda/objects/" + hashPrefix + "/" + treeObject.Hash[2:]
+        file, err := os.Create(hashFilePath)
+        if err != nil {
+            return errors.NewCommitError(fmt.Sprintf("Error while creating tree object file for tree object: %v", treeObject.DirName))
+        }
+        defer file.Close()
+        file.Write(buffer.Bytes())
+    }
+
+    return nil
 }
 
 func (snap Snapshot) String() string {
