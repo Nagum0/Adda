@@ -13,3 +13,13 @@ func HashExists(hash string) bool {
 
     return true
 }
+
+// Returns the contents of the HEAD file.
+func GetHEAD() (string, error) {
+    head, err := os.ReadFile(".adda/HEAD")
+    if err != nil {
+        return "", err
+    }
+
+    return string(head), nil
+}
