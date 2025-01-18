@@ -3,7 +3,6 @@ package commands
 import (
 	"adda/pkg/errors"
 	"adda/pkg/objects"
-	"crypto/sha1"
 	"fmt"
 	"os"
 )
@@ -86,15 +85,6 @@ func Commit(msg string) error {
     if err = snapshot.WriteSnapshotToDatabase(); err != nil {
         return errors.NewCommitError(err.Error())
     }
-
-    commit, err := objects.CreateCommitObject(snapshot)
-    if err != nil {
-        return err
-    }
-    commit.Message = msg
-    commitHash := fmt.Sprintf("%x", sha1.Sum([]byte(commit.String())))
-    // -- TODO:
-    // Write commit object to the object database!
-    
+        
     return nil
 }

@@ -1,9 +1,7 @@
 package objects
 
 import (
-	"adda/pkg/errors"
 	"fmt"
-	"os"
 )
 
 // Commit object.
@@ -24,26 +22,6 @@ type CommitObject struct {
     Message        string
 }
 
-func CreateCommitObject(snapshot Snapshot) (*CommitObject, error) {
-    head, err := GetHEAD()
-    if err != nil {
-        return nil, errors.NewCommitError(err.Error())
-    }
-    
-    // Currently branches are not handled so it only creates a master file at .adda/refs/heads/.
-    if head == "" {
-        if err := initHEAD(); err != nil {
-            return nil, err
-        }
-    }
-
-    commit := CommitObject{
-        RootTree: snapshot["."].Hash,
-    }
-
-    return &commit, nil
-}
-
 func (c CommitObject) String() string {
     return fmt.Sprintf(
         "tree %v\nparent %v\nauthor %v <%v>\ncommitter %v <%v>\n\n%v",
@@ -53,22 +31,4 @@ func (c CommitObject) String() string {
         c.CommitterName, c.CommitterEmail,
         c.Message,
     )
-}
-
-func initHEAD() error {
-    fmt.Println("HEAD is empty. Creating master branch and setting refs head.")
-
-    // Create the reference file for the master branch
-    if err := CreateReferenceFile("master"); err != nil {
-        return errors.NewCommitError(err.Error())
-    }
-
-    file, err := os.Open(".adda/HEAD")
-    if err != nil {
-        return errors.NewCommitError(err.Error())
-    }
-    defer file.Close()
-    file.WriteString("refs/heads/master")
-    
-    return nil
 }
