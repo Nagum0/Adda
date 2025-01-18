@@ -6,6 +6,7 @@ import (
 	"adda/pkg/objects"
 	"fmt"
 	"os"
+	"strings"
 )
 
 // Initializes an Adda repository by creating all of the neccessary init files.
@@ -86,6 +87,45 @@ func Commit(msg string) error {
     if err = snapshot.DBWrite(); err != nil {
         return errors.NewCommitError(err.Error())
     }
+
+    commit := objects.CommitObject{
+        Hash: "",
+        Message: msg,
+        RootTree: snapshot["."].Hash,
+        ParentCommit: "<empty>",
+        AuthorName: "test author",
+        AuthorEmail: "test@email.com",
+        CommitterName: "test committer",
+        CommitterEmail: "test@email.com",
+    }
+    commit.GenHash()
+
+    if err := commit.DBWrite(); err != nil {
+        return err
+    }
+
+    head, err := db.ReadHEAD()
+    if err != nil {
+        return errors.NewCommitError(err.Error())
+    }
+
+    var currentBranch string
+
+    // If the HEAD is currently empty that means that this is the first commit
+    if head == "" {
+        if err := db.SetHEAD("refs/heads/master"); err != nil {
+            return errors.NewCommitError(err.Error())
+        }
+        currentBranch = "master"
+    } else {
+        currentBranch = strings.Split(head, "/")[2]   
+    }
+
+    if err := db.SetRefsHead(currentBranch, commit.Hash); err != nil {
+        return errors.NewCommitError(err.Error())
+    }
+
+    fmt.Println(commit.String())
         
     return nil
 }

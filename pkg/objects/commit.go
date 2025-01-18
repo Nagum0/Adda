@@ -1,11 +1,17 @@
 package objects
 
 import (
+	"adda/pkg"
+	"adda/pkg/db"
+	"adda/pkg/errors"
 	"fmt"
+	"os"
 )
 
 // Commit object.
 type CommitObject struct {
+    // Commit hash.
+    Hash           string
     // The hash for the root tree object.
     RootTree       string
     // The hash for the parent commit.
@@ -20,6 +26,38 @@ type CommitObject struct {
     CommitterEmail string
     // Commit message.
     Message        string
+}
+
+// Sets the hash for the commit.
+func (c *CommitObject) GenHash() {
+    if c.Hash != "" {
+        return
+    }
+    c.Hash = db.GenSHA1([]byte(c.String()))
+}
+
+// Writes the commit to the object database.
+func (c CommitObject) DBWrite() error {
+    if db.HashExists(c.Hash) {
+        return nil
+    }
+
+    _, err := os.Stat(pkg.OBJECTS_PATH + c.Hash[2:] + "/")
+    if os.IsNotExist(err) {
+        if err := os.Mkdir(pkg.OBJECTS_PATH + c.Hash[:2] + "/", os.ModePerm); err != nil {
+            return errors.NewCommitError(err.Error())
+        }
+    }
+    
+    compressedCommit := db.ZlibCompressString(c.String())
+    file, err := os.Create(pkg.OBJECTS_PATH + c.Hash[:2] + "/" + c.Hash[2:])
+    if err != nil {
+        return errors.NewCommitError(err.Error())
+    }
+    defer file.Close()
+    file.Write(compressedCommit)
+
+    return nil
 }
 
 func (c CommitObject) String() string {
