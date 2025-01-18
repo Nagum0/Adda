@@ -1,6 +1,7 @@
 package objects
 
 import (
+	"adda/pkg/db"
 	"adda/pkg/errors"
 	"bytes"
 	"compress/zlib"
@@ -131,7 +132,7 @@ func TakeSnapshot(indexFile Index) Snapshot {
 // Writes the snapshot's tree objects to the object database (zlib compression).
 func (s Snapshot) WriteSnapshotToDatabase() error {
     for _, treeObject := range s {
-        if HashExists(treeObject.Hash) {
+        if db.HashExists(treeObject.Hash) {
             continue
         }
         

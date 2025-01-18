@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"adda/pkg/db"
 	"adda/pkg/errors"
 	"adda/pkg/objects"
 	"fmt"
@@ -51,7 +52,7 @@ func Add(filePath string) error {
         return errors.NewAddError(err.Error(), filePath)
     }
 
-    if objects.HashExists(hash) {
+    if db.HashExists(hash) {
         return nil
     }
 
