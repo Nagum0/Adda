@@ -32,6 +32,18 @@ func DBRead(hash string) ([]byte, error) {
     return contents, nil
 }
 
+// Checks whether the given hash already exists in the object database.
+func HashExists(hash string) bool {
+    hashPath := pkg.OBJECTS_PATH + hash[:2] + "/" + hash[2:]
+
+    _, err := os.Stat(hashPath)
+    if os.IsNotExist(err) {
+        return false
+    }
+
+    return true
+}
+
 // Generate a SHA-1 hash for the given byte slice. The hash will be returned as a string.
 func GenSHA1(contents []byte) string {
     return fmt.Sprintf("%x", sha1.Sum(contents))
