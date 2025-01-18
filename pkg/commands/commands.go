@@ -83,7 +83,7 @@ func Commit(msg string) error {
     }
     
     snapshot := objects.TakeSnapshot(*indexFile)
-    if err = snapshot.WriteSnapshotToDatabase(); err != nil {
+    if err = snapshot.DBWrite(); err != nil {
         return errors.NewCommitError(err.Error())
     }
         

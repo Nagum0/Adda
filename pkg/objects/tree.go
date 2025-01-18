@@ -1,11 +1,9 @@
 package objects
 
 import (
+	"adda/pkg"
 	"adda/pkg/db"
 	"adda/pkg/errors"
-	"bytes"
-	"compress/zlib"
-	"crypto/sha1"
 	"fmt"
 	"os"
 	"sort"
@@ -130,22 +128,15 @@ func TakeSnapshot(indexFile Index) Snapshot {
 }
 
 // Writes the snapshot's tree objects to the object database (zlib compression).
-func (s Snapshot) WriteSnapshotToDatabase() error {
+func (s Snapshot) DBWrite() error {
     for _, treeObject := range s {
         if db.HashExists(treeObject.Hash) {
             continue
         }
         
-        treeString := treeObject.String()
-        buffer := bytes.Buffer{}
-        writer := zlib.NewWriter(&buffer)
-        if _, err := writer.Write([]byte(treeString)); err != nil {
-            return errors.NewCommitError("Error while writing the snapshot to the object database.")
-        }
-        writer.Close()
-
+        compressedBytes := db.ZlibCompressString(treeObject.String())
         hashPrefix := treeObject.Hash[:2]
-        hashDirPath := ".adda/objects/" + hashPrefix + "/"
+        hashDirPath := pkg.OBJECTS_PATH + hashPrefix + "/"
         _, err := os.Stat(hashDirPath)
         if os.IsNotExist(err) {
             if err := os.Mkdir(hashDirPath, os.ModePerm); err != nil {
@@ -153,13 +144,13 @@ func (s Snapshot) WriteSnapshotToDatabase() error {
             }
         }
 
-        hashFilePath := ".adda/objects/" + hashPrefix + "/" + treeObject.Hash[2:]
+        hashFilePath := pkg.OBJECTS_PATH + hashPrefix + "/" + treeObject.Hash[2:]
         file, err := os.Create(hashFilePath)
         if err != nil {
             return errors.NewCommitError(fmt.Sprintf("Error while creating tree object file for tree object: %v", treeObject.DirName))
         }
         defer file.Close()
-        file.Write(buffer.Bytes())
+        file.Write(compressedBytes)
     }
 
     return nil
@@ -194,6 +185,6 @@ func generateTreeHashes(snapshot Snapshot, dirName string) {
         return tree.SubDirs[i].DirName < tree.SubDirs[j].DirName
     })
 
-    tree.Hash = fmt.Sprintf("%x", sha1.Sum([]byte(tree.String())))
+    tree.Hash = db.GenSHA1([]byte(tree.String()))
     snapshot[dirName] = tree
 }
