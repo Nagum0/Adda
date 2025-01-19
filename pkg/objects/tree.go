@@ -1,8 +1,11 @@
 package objects
 
 import (
-	"crypto/sha1"
+	"adda/pkg"
+	"adda/pkg/db"
+	"adda/pkg/errors"
 	"fmt"
+	"os"
 	"sort"
 	"strings"
 )
@@ -29,7 +32,7 @@ type TreeObject struct {
     // The hash of the tree object.
     Hash    string
     // The tree's subdirectories
-    SubDirs []TreeObject
+    SubDirs []*TreeObject
     // The tree's blob objects   
     Blobs   []TreeBlob
 }
@@ -37,7 +40,7 @@ type TreeObject struct {
 func NewTreeObject(dirName string) *TreeObject {
     return &TreeObject {
         DirName: dirName,
-        SubDirs: make([]TreeObject, 0),
+        SubDirs: make([]*TreeObject, 0),
         Blobs: make([]TreeBlob, 0),
     }
 }
@@ -69,11 +72,11 @@ func (tree TreeObject) String() string {
     s := ""
     
     for _, blob := range tree.Blobs {
-        s += fmt.Sprintf("0 %v\t%v", blob.Hash, blob.FileName)
+        s += fmt.Sprintf("0 %v\t%v\n", blob.Hash, blob.FileName)
     }
 
     for _, subDir := range tree.SubDirs {
-        s += fmt.Sprintf("1 %v\t%v", subDir.Hash, subDir.DirName)
+        s += fmt.Sprintf("1 %v\t%v\n", subDir.Hash, subDir.DirName)
     }
 
     return s
@@ -81,16 +84,16 @@ func (tree TreeObject) String() string {
 
 // Snapshot of the directory structure at the time of a given commit. 
 // Maps the directory names to tree objects.
-type Snapshot map[string]TreeObject
+type Snapshot map[string]*TreeObject
 
-func NewSnapshot() *map[string]TreeObject {
-    return &map[string]TreeObject{}
+func NewSnapshot() *map[string]*TreeObject {
+    return &map[string]*TreeObject{}
 }
 
 // Takes a snapshot of the current directory structure of the staged files and retuns a Snaphot.
 func TakeSnapshot(indexFile Index) Snapshot {
     snapshot := *NewSnapshot()
-    snapshot["."] = *NewTreeObject(".")
+    snapshot["."] = NewTreeObject(".")
     
     for _, entry := range indexFile.Entries {
         dirs := strings.Split(entry.FilePath, "/")
@@ -98,14 +101,15 @@ func TakeSnapshot(indexFile Index) Snapshot {
 
         for i := 0; i < len(dirs) - 1; i++ {
             nextDir := dirs[i]
+            nextDirTree := NewTreeObject(nextDir)
 
             if _, ok := snapshot[nextDir]; !ok {
-                snapshot[nextDir] = *NewTreeObject(nextDir)
+                snapshot[nextDir] = nextDirTree
             }
 
             // Add the nextDir to the currentDir as a child if it doesn't already contain it
             if currentDirTree := snapshot[currentDir]; !currentDirTree.ContainsSubDir(nextDir) {
-                currentDirTree.SubDirs = append(currentDirTree.SubDirs, *NewTreeObject(nextDir))
+                currentDirTree.SubDirs = append(currentDirTree.SubDirs, nextDirTree)
                 snapshot[currentDir] = currentDirTree
             }
 
@@ -119,8 +123,47 @@ func TakeSnapshot(indexFile Index) Snapshot {
     }
 
     generateTreeHashes(snapshot, ".")
-
+    
     return snapshot
+}
+
+// Writes the snapshot's tree objects to the object database (zlib compression).
+func (s Snapshot) DBWrite() error {
+    for _, treeObject := range s {
+        if db.HashExists(treeObject.Hash) {
+            continue
+        }
+        
+        compressedBytes := db.ZlibCompressString(treeObject.String())
+        hashPrefix := treeObject.Hash[:2]
+        hashDirPath := pkg.OBJECTS_PATH + hashPrefix + "/"
+        _, err := os.Stat(hashDirPath)
+        if os.IsNotExist(err) {
+            if err := os.Mkdir(hashDirPath, os.ModePerm); err != nil {
+                return errors.NewCommitError(fmt.Sprintf("Error while creating hash directory for tree object: %v", treeObject.DirName))
+            }
+        }
+
+        hashFilePath := pkg.OBJECTS_PATH + hashPrefix + "/" + treeObject.Hash[2:]
+        file, err := os.Create(hashFilePath)
+        if err != nil {
+            return errors.NewCommitError(fmt.Sprintf("Error while creating tree object file for tree object: %v", treeObject.DirName))
+        }
+        defer file.Close()
+        file.Write(compressedBytes)
+    }
+
+    return nil
+}
+
+func (snap Snapshot) String() string {
+    s := ""
+    
+    for dirName, treeObject := range snap {
+        s += fmt.Sprintf("%v -> %v:\n%v\n", dirName, treeObject.Hash, treeObject)
+    }
+
+    return s
 }
 
 // Generate the hashes for the tree objects in the given snapshot.
@@ -142,6 +185,6 @@ func generateTreeHashes(snapshot Snapshot, dirName string) {
         return tree.SubDirs[i].DirName < tree.SubDirs[j].DirName
     })
 
-    tree.Hash = fmt.Sprintf("%x", sha1.Sum([]byte(tree.String())))
+    tree.Hash = db.GenSHA1([]byte(tree.String()))
     snapshot[dirName] = tree
 }
