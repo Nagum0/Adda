@@ -75,6 +75,7 @@ func Add(filePath string) error {
     return nil
 }
 
+// TODO: ONLY COMMIT IF SOMETHING HAS ACTUALY BEEN MODIFIED!
 // Creates a commit object and writes it to the object database. Also sets the 
 // refs/heads/<current branch> to the new commit object's hash.
 func Commit(msg string) error {
@@ -83,44 +84,58 @@ func Commit(msg string) error {
         return errors.NewCommitError(err.Error())
     }
     
+    // Take snapshot of the current state and save it in the database
     snapshot := objects.TakeSnapshot(*indexFile)
     if err = snapshot.DBWrite(); err != nil {
         return errors.NewCommitError(err.Error())
     }
-
+    
     commit := objects.CommitObject{
-        Hash: "",
         Message: msg,
         RootTree: snapshot["."].Hash,
-        ParentCommit: "<empty>",
-        AuthorName: "test author",
+        AuthorName: "tester",
         AuthorEmail: "test@email.com",
-        CommitterName: "test committer",
+        CommitterName: "tester",
         CommitterEmail: "test@email.com",
-    }
-    commit.GenHash()
-
-    if err := commit.DBWrite(); err != nil {
-        return err
     }
 
     head, err := db.ReadHEAD()
     if err != nil {
         return errors.NewCommitError(err.Error())
     }
-
+    
+    // Get the current branch
     var currentBranch string
 
-    // If the HEAD is currently empty that means that this is the first commit
     if head == "" {
         if err := db.SetHEAD("refs/heads/master"); err != nil {
             return errors.NewCommitError(err.Error())
         }
         currentBranch = "master"
     } else {
-        currentBranch = strings.Split(head, "/")[2]   
+        currentBranch = strings.Split(head, "/")[2]
     }
 
+    // Get the parent hash if it exists
+    refHead, err := db.ReadRefHead(currentBranch)
+    if err != nil {
+        if os.IsNotExist(err) {
+            commit.ParentCommit = refHead
+        } else {
+            return errors.NewCommitError(err.Error())
+        }
+    }
+    commit.ParentCommit = refHead
+    
+    // Generate the commit hash
+    commit.GenHash()
+
+    // Write the commit object to the object database
+    if err := commit.DBWrite(); err != nil {
+        return err
+    }
+    
+    // Set the refs/heads/currentBranch to the commit's hash
     if err := db.SetRefsHead(currentBranch, commit.Hash); err != nil {
         return errors.NewCommitError(err.Error())
     }
