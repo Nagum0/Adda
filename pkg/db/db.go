@@ -65,19 +65,19 @@ func ZlibCompressString(s string) []byte {
 
 // Decompress the byte slice from zlib.
 func Decompress(contents []byte) ([]byte, error) {
-    bytes := bytes.NewBuffer(contents)
-    reader, err := zlib.NewReader(bytes)
+    contentsReader := bytes.NewReader(contents)
+    reader, err := zlib.NewReader(contentsReader)
     if err != nil {
         return nil, err
     }
     defer reader.Close()
     
-    bytes.Reset()
-    if _, err := io.Copy(bytes, reader); err != nil {
+    decompressedBytes := bytes.Buffer{}
+    if _, err := io.Copy(&decompressedBytes, reader); err != nil {
         return nil, err
     }
 
-    return bytes.Bytes(), nil
+    return decompressedBytes.Bytes(), nil
 }
 
 // Decompress the byte slice from zlib compression to a string.

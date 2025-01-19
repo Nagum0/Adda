@@ -1,7 +1,10 @@
 package tests
 
 import (
+	"adda/pkg/commands"
+	"adda/pkg/db"
 	"adda/pkg/objects"
+	"os"
 	"strings"
 	"testing"
 )
@@ -9,7 +12,7 @@ import (
 func TestTakeSnapshot(t *testing.T) {
     indexFile := createTestIndexFile()
     snapshot := objects.TakeSnapshot(indexFile)
-    
+
     // Test the root directory
     rootTree, ok := snapshot["."]
 
@@ -17,7 +20,7 @@ func TestTakeSnapshot(t *testing.T) {
         t.Error("Root tree not found in snapshot")
     }
     
-    if  !rootTree.ContainsSubDir("sub") || 
+    if !rootTree.ContainsSubDir("sub") || 
     !rootTree.ContainsSubDir("stf") ||
     !rootTree.ContainsBlobFile("hello.txt") ||
     !rootTree.ContainsBlobFile("lol.txt") ||
@@ -29,7 +32,7 @@ func TestTakeSnapshot(t *testing.T) {
         )
     }
 
-    if rootTree.Hash != "bc8c7392523d88fdc04de7b48168bc51864ac8b8" {
+    if rootTree.Hash != "f7b1123555c3a745900685f6468f4436dfaa0972" {
         t.Errorf("Expected root tree hash: bc8c7392523d88fdc04de7b48168bc51864ac8b8; Received root tree hash: %v", rootTree.Hash)
     }
 
@@ -40,7 +43,7 @@ func TestTakeSnapshot(t *testing.T) {
         t.Error("Sub tree not found in snapshot")
     }
 
-    if  !subTree.ContainsSubDir("dub") || 
+    if !subTree.ContainsSubDir("dub") || 
     !subTree.ContainsBlobFile("file.txt") {
         t.Errorf(
             "Root tree does not contain the expected elements\nExpected blobs: [file.txt]; Received blobs: %v\nExpected subdirs: [dub]; Received subdirs: %v",
@@ -49,7 +52,7 @@ func TestTakeSnapshot(t *testing.T) {
         )
     }
 
-    if subTree.Hash != "0483d54712d4c601af4c5d36ca603417a33d8b23" {
+    if subTree.Hash != "bf93405336d370b6260496c35e677e5fac0b9f56" {
         t.Errorf("Expected sub tree hash: 0483d54712d4c601af4c5d36ca603417a33d8b23; Received sub tree hash: %v", subTree.Hash)
     }
 
@@ -68,7 +71,7 @@ func TestTakeSnapshot(t *testing.T) {
         )
     }
 
-    if dubTree.Hash != "a2e863286e13f3a9845a13f8a6b1c87604235cf7" {
+    if dubTree.Hash != "7e7c784a4214a2fbd5b6f38de749489da3491ede" {
         t.Errorf("Expected dub tree hash: a2e863286e13f3a9845a13f8a6b1c87604235cf7; Received dub tree hash: %v", dubTree.Hash)
     }
 
@@ -87,8 +90,44 @@ func TestTakeSnapshot(t *testing.T) {
         )
     }
 
-    if stfTree.Hash != "f615d1efcb4ce91b1cacab5d77dd5890f31b7537" {
+    if stfTree.Hash != "dc8c7d2282fdcc759113aaf74bb1b1051e67f027" {
         t.Errorf("Expected stf tree hash: f615d1efcb4ce91b1cacab5d77dd5890f31b7537; Received stf tree hash: %v", stfTree.Hash)
+    }
+
+}
+
+func TestSnapshotDBWrite(t *testing.T) {
+    defer os.RemoveAll(".adda/")
+
+    if err := commands.Init(); err != nil {
+        t.Errorf("Error while setting up repo for test: %v", err.Error())
+    }
+
+    index := createTestIndexFile()
+    snapshot := objects.TakeSnapshot(index)
+    
+    if err := snapshot.DBWrite(); err != nil {
+        t.Errorf("Error while writing to database: %v", err.Error())
+    }
+
+    for _, treeObject := range snapshot {
+        if !db.HashExists(treeObject.Hash) {
+            t.Errorf("Tree object not created: %v", treeObject.String())
+        }
+
+        treeObjectData, err := db.DBRead(treeObject.Hash)
+        if err != nil {
+            t.Errorf("Error while reading in database: %v", err.Error())
+        }
+
+        treeString, err := db.DecompressToString(treeObjectData)
+        if err != nil {
+            t.Errorf("Error while decompressing tree object file: %v", err.Error())
+        }
+
+        if treeString != treeObject.String() {
+            t.Errorf("Expetced tree object:\n%vReceived tree object:\n%v", treeObject.String(), treeString)
+        }
     }
 }
 
