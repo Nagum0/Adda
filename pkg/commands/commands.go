@@ -121,6 +121,8 @@ func Commit(msg string) error {
     refHead, err := db.ReadRefHead(currentBranch)
     if err != nil {
         if os.IsNotExist(err) {
+            // TODO: If the ref head is empty it must mean that we're on fresh branch
+            // and we should set the parent commit to be the last commit we branched off of.
             commit.ParentCommit = ""
         } else {
             return errors.NewCommitError(err.Error())
