@@ -114,18 +114,19 @@ func Commit(msg string) error {
         currentBranch = "master"
     } else {
         currentBranch = strings.Split(head, "/")[2]
+        currentBranch = strings.Trim(currentBranch, "\n")
     }
 
     // Get the parent hash if it exists
     refHead, err := db.ReadRefHead(currentBranch)
     if err != nil {
         if os.IsNotExist(err) {
-            commit.ParentCommit = refHead
+            commit.ParentCommit = ""
         } else {
             return errors.NewCommitError(err.Error())
         }
     }
-    commit.ParentCommit = refHead
+    commit.ParentCommit = strings.Trim(refHead, "\n")
     
     // Generate the commit hash
     commit.GenHash()
