@@ -147,3 +147,20 @@ func Commit(msg string) error {
         
     return nil
 }
+
+// Prints the contents of the file with the given hash.
+func Cat(hash string) error {
+    data, err := db.DBRead(hash)
+    if err != nil {
+        return errors.NewBlobError("[CAT ERROR]")
+    }
+    
+    decompressedData, err := db.Decompress(data)
+    if err != nil {
+        return errors.NewBlobError("[CAT ERROR]")
+    }
+
+    fmt.Println(string(decompressedData))
+
+    return nil
+}
