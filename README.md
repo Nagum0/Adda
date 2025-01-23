@@ -35,4 +35,15 @@ adda add <filepath>
 adda commit <message>
 ```
 - Details:
-  - x
+  - Takes a snapshot of the current staged files and creates the tree objects and the commit object.
+  - Updates the refs/heads/<current branch> to the created commit object.
+  - The parent commit is set to be the contents of the refs/heads/<current branch>.
+  - If this is the first commit the **master** branch is created and the HEAD is set to point to refs/heads/master.
+
+### Cat
+
+- Prints the decompressed contents of a file from the object database.
+- Usage:
+``` bash
+adda cat <hash>
+```

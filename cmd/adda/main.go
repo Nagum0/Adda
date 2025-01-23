@@ -38,6 +38,14 @@ func main() {
         }
 
         break
+
+    case "cat":
+        if err := commands.Cat(args[1]); err != nil {
+            fmt.Println(err.Error())
+            os.Exit(1)
+        }
+
+        break
     default:
         fmt.Println("Unknown command: ", args[0])
         break
