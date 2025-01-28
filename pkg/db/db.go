@@ -2,20 +2,22 @@ package db
 
 import (
 	"adda/pkg"
+	"adda/pkg/errors"
 	"bytes"
 	"compress/zlib"
 	"crypto/sha1"
 	"fmt"
 	"io"
 	"os"
+	"strings"
 )
 
 // ---------------------------------------------------------------------------------------
 //                                  OBJECT DATABASE FUNCTIONALITY
 // ---------------------------------------------------------------------------------------
 
-// Types that implement this interface can write to the object database using 
-// the DBWrite() function. It is expected that the types hold the hash and contents 
+// Types that implement this interface can write to the object database using
+// the DBWrite() function. It is expected that the types hold the hash and contents
 // that are needed to be written to the database.
 type DBWriter interface {
     DBWrite() error
@@ -113,6 +115,21 @@ func SetHEAD(ref string) error {
     }
 
     return nil
+}
+
+// Return the name of the current branch.
+func CurrentBranch() (string, error) {
+    head, err := ReadHEAD()
+    if err != nil {
+        return "", err
+    }
+
+    headParts := strings.Split(head, "/")
+    if len(headParts) != 3 {
+        return "", errors.NewBlobError("CORRUPT OR EMPTY HEAD FILE")
+    }
+
+    return headParts[2], nil
 }
 
 // Reads the contents of the given branch's reference head.

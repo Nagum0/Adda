@@ -169,8 +169,20 @@ func Cat(hash string) error {
 // to the commit object hash of the branch we branched off of.
 func Branch(name string) error {
     // Get the current branches commit object hash
+    currentBranch, err := db.CurrentBranch()
+    if err != nil {
+        return err
+    }
+
+    commitObjectHash, err := db.ReadRefHead(currentBranch)
+    if err != nil {
+        return err
+    }
 
     // Create the ref file and set the commit object hash
+    if err := db.SetRefsHead(name, commitObjectHash); err != nil {
+        return err
+    }
 
     return nil
 }
