@@ -46,6 +46,20 @@ func main() {
         }
 
         break
+    case "branch":
+        if err := commands.Branch(args[1]); err != nil {
+            fmt.Println(err.Error())
+            os.Exit(1)
+        }
+
+        break
+    case "goto":
+        if err := commands.Goto(args[1]); err != nil {
+            fmt.Println(err.Error())
+            os.Exit(1)
+        }
+
+        break
     default:
         fmt.Println("Unknown command: ", args[0])
         break

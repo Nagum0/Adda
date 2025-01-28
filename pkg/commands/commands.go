@@ -164,3 +164,19 @@ func Cat(hash string) error {
 
     return nil
 }
+
+// Create a branch. Create the ref file for the branch at refs/heads/name and set it to point
+// to the commit object hash of the branch we branched off of.
+func Branch(name string) error {
+    // Get the current branches commit object hash
+
+    // Create the ref file and set the commit object hash
+
+    return nil
+}
+
+// Go to the branch that was specified. Set the HEAD to refs/heads/branch. 
+// Read the branches root tree object and update the current file structure accordingly.
+func Goto(branch string) error {
+    return nil
+}
