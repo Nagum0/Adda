@@ -47,3 +47,13 @@ adda commit <message>
 ``` bash
 adda cat <hash>
 ```
+
+### Branch
+
+Creates a new branch with the given name.
+- Usage:
+``` bash
+adda branch <branch-name>
+```
+- Details:
+  - Creates a reference file at .adda/refs/heads/branch and sets it to point to the commit object hash of the branch we branched off of.
