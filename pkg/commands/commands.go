@@ -190,5 +190,63 @@ func Branch(name string) error {
 // Go to the branch that was specified. Set the HEAD to refs/heads/branch. 
 // Read the branches root tree object and update the current file structure accordingly.
 func Goto(branch string) error {
+    // Set HEAD
+    if err := db.SetHEAD("refs/heads/" + branch); err != nil {
+        return errors.NewBranchError(err.Error())
+    }
+
+    // Parse the branches latest commit object
+    commitObjectString, err := readBranchLatestCommitObjectString(branch)
+    if err != nil {
+        return errors.NewBranchError(err.Error())
+    }
+    
+    latestCommitObject, err := objects.ParseCommitString(commitObjectString)
+    if err != nil {
+        return errors.NewBranchError(err.Error())
+    }
+
+    // Parse the root tree object of the commit (into a snapshot)
+    snapshot, err := objects.BuildBranchsLatestSnapshot(latestCommitObject.RootTree)
+    if err != nil {
+        return errors.NewBranchError(err.Error())
+    }
+
+    fmt.Println(snapshot.String())
+
+    // Walk the root tree object (snapshot) and update the current file structure and the INDEX file
+    if err := updateFileStructureAfterGoto(*snapshot); err != nil {
+        return errors.NewBranchError(err.Error())
+    }
+
+    index := snapshot.BuildIndex()
+    if err := updateIndexFileAfterGoto(*index); err != nil {
+        return errors.NewBranchError(err.Error())
+    }
+
     return nil
+}
+
+// TODO: updateIndexFileAfterGoto
+func updateIndexFileAfterGoto(index objects.Index) error {
+    panic("todo")
+}
+
+// TODO: updateFileStructure
+func updateFileStructureAfterGoto(s objects.Snapshot) error {
+    panic("todo")
+}
+
+func readBranchLatestCommitObjectString(branch string) (string, error) {
+    branchLatestCommitHash, err := db.ReadRefHead(branch)
+    if err != nil {
+        return "", errors.NewBranchError(err.Error())
+    }
+
+    commitObject, err := db.DBRead(branchLatestCommitHash)
+    if err != nil {
+        return "", errors.NewBranchError(err.Error())
+    }
+
+    return db.DecompressToString(commitObject)
 }

@@ -70,3 +70,9 @@ func (c CommitObject) String() string {
         c.Message,
     )
 }
+
+// TODO: ParseCommitString
+// Takes a string and parses into a CommitObject.
+func ParseCommitString(s string) (*CommitObject, error) {
+    panic("todo")   
+}

@@ -85,3 +85,16 @@ func (e *CommitError) Error() string {
     return "[COMMIT ERROR] " + e.msg
 }
 
+// Error representing failure during work with branches.
+type BranchError struct {
+    msg string
+}
+
+// Creates a new BranchError.
+func NewBranchError(msg string) *BranchError {
+    return &BranchError{ msg: msg }
+}
+
+func (e *BranchError) Error() string {
+    return "[BRANCH ERROR] " + e.msg
+}

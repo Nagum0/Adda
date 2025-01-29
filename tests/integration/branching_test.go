@@ -24,7 +24,7 @@ func TestFreshBranch(t *testing.T) {
 
     commands.Branch("test_branch")
 
-    // -- TESTING:
+    // -- TEST:
     _, err := os.Stat(pkg.REFS_HEADS_PATH + "test_branch")
     if os.IsNotExist(err) {
         t.Error(err.Error())
@@ -35,4 +35,28 @@ func TestFreshBranch(t *testing.T) {
     if commitHash != newBranchCommitHash {
         t.Errorf("Expected hash: %v; Received hash: %v;", commitHash, newBranchCommitHash)
     }
+}
+
+func TestGotoBranchHeadUpdate(t *testing.T) {
+    // -- SETUP:
+    defer os.RemoveAll(".adda")
+    defer os.Remove("test.txt")
+
+    commands.Init()
+
+    file, _ := os.Create("test.txt")
+    defer file.Close()
+    file.WriteString("Hello, world!")
+
+    commands.Add("test.txt")
+    commands.Commit("Test commit.")
+
+    commands.Branch("test_branch")
+    commands.Goto("test_branch")
+
+    // -- TEST:
+    head, _ := db.ReadHEAD()
+    if head != "refs/heads/test_branch" {
+        t.Errorf("Expected HEAD: refs/heads/test_branch; Received HEAD: %v", head)
+    }   
 }

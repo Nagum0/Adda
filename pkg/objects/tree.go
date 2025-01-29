@@ -90,7 +90,7 @@ func NewSnapshot() *map[string]*TreeObject {
     return &map[string]*TreeObject{}
 }
 
-// Takes a snapshot of the current directory structure of the staged files and retuns a Snaphot.
+// Takes a snapshot of the current directory structure of the staged files and retuns a Snapshot.
 func TakeSnapshot(indexFile Index) Snapshot {
     snapshot := *NewSnapshot()
     snapshot["."] = NewTreeObject(".")
@@ -125,6 +125,18 @@ func TakeSnapshot(indexFile Index) Snapshot {
     generateTreeHashes(snapshot, ".")
     
     return snapshot
+}
+
+// TODO: BuildIndex
+// Takes a snapshot and builds an index file from it.
+func (s Snapshot) BuildIndex() *Index {
+    panic("todo")
+}
+
+// TODO: GetBranchesLatestSnapshot
+// Takes the hash of the root tree of the branchs latest commit object and builds the snapshot from it.
+func BuildBranchsLatestSnapshot(rootTreeHash string) (*Snapshot, error) {
+    panic("todo")
 }
 
 // Writes the snapshot's tree objects to the object database (zlib compression).

@@ -7,7 +7,7 @@
 
 ### Init
 
-- Intializes an Adda repository.
+Intializes an Adda repository.
 - Usage:
 ``` bash
 adda init
@@ -17,7 +17,7 @@ adda init
 
 ### Add
 
-- Adds a file to the stagin area.
+Adds a file to the stagin area.
 - Usage:
 ``` bash
 adda add <filepath>
@@ -29,7 +29,7 @@ adda add <filepath>
 
 ### Commit
 
-- Commits the staged files and updates the HEAD of the branch.
+Commits the staged files and updates the HEAD of the branch.
 - Usage:
 ``` bash
 adda commit <message>
