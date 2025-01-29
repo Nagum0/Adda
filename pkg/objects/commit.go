@@ -6,6 +6,7 @@ import (
 	"adda/pkg/errors"
 	"fmt"
 	"os"
+	"strings"
 )
 
 // Commit object.
@@ -62,7 +63,7 @@ func (c CommitObject) DBWrite() error {
 
 func (c CommitObject) String() string {
     return fmt.Sprintf(
-        "tree %v\nparent %v\nauthor %v <%v>\ncommitter %v <%v>\n\n%v",
+        "tree %v\nparent %v\nauthor %v %v\ncommitter %v %v\n\n%v",
         c.RootTree, 
         c.ParentCommit,
         c.AuthorName, c.AuthorEmail,
@@ -71,8 +72,48 @@ func (c CommitObject) String() string {
     )
 }
 
-// TODO: ParseCommitString
-// Takes a string and parses into a CommitObject.
+// Takes a string and parses it into a CommitObject.
 func ParseCommitString(s string) (*CommitObject, error) {
-    panic("todo")   
+    commitObject := CommitObject{}
+    commitObject.Hash = db.GenSHA1([]byte(s))
+    s = strings.Replace(s, "\n\n", "\n", -1)
+    lines := strings.Split(s, "\n")
+    lines = lines[:len(lines) - 1]
+
+    for _, line := range lines {
+        lineParts := strings.Fields(line)
+
+        if len(lineParts) == 1 {
+            commitObject.Message = line
+        } else if len(lineParts) == 2 {
+            switch lineParts[0] {
+            case "tree":
+                commitObject.RootTree = lineParts[1]
+                break
+            case "parent":
+                commitObject.ParentCommit = lineParts[1]
+                break
+            default:
+                return nil, errors.NewCommitError("Illegal commit format.")
+            }
+        } else if len(lineParts) == 3 {
+            switch lineParts[0] {
+            case "author":
+                commitObject.AuthorName = lineParts[1]
+                commitObject.AuthorEmail = lineParts[2]
+                break
+            case "committer":
+                commitObject.CommitterName = lineParts[1]
+                commitObject.CommitterEmail = lineParts[2]
+                break
+            default:
+                return nil, errors.NewCommitError("Illegal commit format.")
+            }
+        } else {
+            fmt.Println("here")
+            return nil, errors.NewCommitError("Illegal commit format.")
+        }
+    }
+
+    return &commitObject, nil
 }

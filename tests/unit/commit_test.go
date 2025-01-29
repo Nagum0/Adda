@@ -12,8 +12,8 @@ func TestParseCommitString(t *testing.T) {
     var commitString string = `
 tree a6f410699fdf6949c49ab39f6bd29e4dacb3508d
 parent caf9f837b68cfd5e728cc9a5cfeac8f5b3704cd5
-author tester <test@email.com>
-committer tester <test@email.com>
+author tester test@email.com
+committer tester test@email.com
 
 Second
     `
@@ -38,12 +38,12 @@ Second
         t.Errorf("Expected root tree hash: a6f410699fdf6949c49ab39f6bd29e4dacb3508d; Received root tree hash: %v", commitObject.RootTree)
     }
 
-    if commitObject.AuthorName != "tester" || commitObject.AuthorEmail != "test@gmail.com" {
-        t.Errorf("Expected author info: tester test@gmail.com; Received author info: %v %v", commitObject.AuthorName, commitObject.AuthorEmail)
+    if commitObject.AuthorName != "tester" || commitObject.AuthorEmail != "test@email.com" {
+        t.Errorf("Expected author info: tester test@email.com; Received author info: %v %v", commitObject.AuthorName, commitObject.AuthorEmail)
     }
 
-    if commitObject.CommitterName != "tester" || commitObject.CommitterEmail != "test@gmail.com" {
-        t.Errorf("Expected committer info: tester test@gmail.com; Received committer info: %v %v", commitObject.CommitterName, commitObject.CommitterEmail)
+    if commitObject.CommitterName != "tester" || commitObject.CommitterEmail != "test@email.com" {
+        t.Errorf("Expected committer info: tester test@email.com; Received committer info: %v %v", commitObject.CommitterName, commitObject.CommitterEmail)
     }
     
     if commitObject.Message != "Second" {
