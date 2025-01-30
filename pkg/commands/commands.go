@@ -160,7 +160,7 @@ func Cat(hash string) error {
         return errors.NewBlobError("[CAT ERROR]")
     }
 
-    fmt.Println(string(decompressedData))
+    fmt.Print(string(decompressedData))
 
     return nil
 }
@@ -212,7 +212,7 @@ func Goto(branch string) error {
         return errors.NewBranchError(err.Error())
     }
 
-    fmt.Println(snapshot.String())
+    fmt.Println(snapshot)
 
     // Walk the root tree object (snapshot) and update the current file structure and the INDEX file
     if err := updateFileStructureAfterGoto(*snapshot); err != nil {

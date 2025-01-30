@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -65,6 +66,65 @@ func (tree TreeObject) ContainsBlobFile(fileName string) bool {
     }
 
     return false
+}
+
+// Takes a string representation of a tree object and parses it into a TreeObject.
+func ParseTreeObjectString(s string, isRoot bool) (*TreeObject, error) {
+    treeObject := *NewTreeObject("")
+    if isRoot {
+        treeObject.DirName = "."
+    }
+    treeHash := db.GenSHA1([]byte(s))
+    treeObject.Hash = treeHash
+
+    lines := strings.Split(s, "\n")
+    lines = lines[:len(lines) - 1]
+    
+    for _, line := range lines {
+        lineFields := strings.Fields(line)
+
+        if len(lineFields) != 3 {
+            return nil, errors.NewTreeError("Illegal tree object string format.")
+        }
+
+        fileType, err := strconv.Atoi(lineFields[0])
+        if err != nil {
+            return nil, errors.NewTreeError(err.Error())
+        }
+
+        switch fileType {
+        // Blob file
+        case 0:
+            blob := TreeBlob{
+                Hash: lineFields[1],
+                FileName: lineFields[2],
+            }
+            treeObject.Blobs = append(treeObject.Blobs, blob)
+            break
+        // Subtree
+        case 1:
+            subTreeHash := lineFields[1]
+            subTreeName := lineFields[2]
+            subTreeBytes, err := db.DBRead(subTreeHash)
+            if err != nil {
+                return nil, errors.NewTreeError(err.Error())
+            }
+
+            subTreeString, err := db.DecompressToString(subTreeBytes)
+            if err != nil {
+                return nil, errors.NewTreeError(err.Error())
+            }
+
+            subTree, err := ParseTreeObjectString(subTreeString, false)
+            subTree.DirName = subTreeName
+            treeObject.SubDirs = append(treeObject.SubDirs, subTree)
+            break
+        default:
+            return nil, errors.NewTreeError(fmt.Sprintf("Unknown file type: %v", fileType))
+        }
+    }
+
+    return &treeObject, nil
 }
 
 // Parse tree object into a string. Tree object format: <object type> <hash> <file/directory name>.
@@ -133,10 +193,39 @@ func (s Snapshot) BuildIndex() *Index {
     panic("todo")
 }
 
-// TODO: GetBranchesLatestSnapshot
+// TODO: BuildBranchsLatestSnapshot
 // Takes the hash of the root tree of the branchs latest commit object and builds the snapshot from it.
 func BuildBranchsLatestSnapshot(rootTreeHash string) (*Snapshot, error) {
-    panic("todo")
+    snapshot := Snapshot{}
+    rootTree, err := getRootTree(rootTreeHash)
+    if err != nil {
+        return nil, errors.NewBranchError(err.Error())
+    }
+    
+    snapshot["."] = rootTree
+
+    fmt.Println(rootTree)
+    
+    return &snapshot, nil
+}
+
+func getRootTree(rootTreeHash string) (*TreeObject, error) {
+    rootTree, err := db.DBRead(rootTreeHash)
+    if err != nil {
+        return nil, errors.NewTreeError(err.Error())
+    }
+    
+    rootTreeString, err := db.DecompressToString(rootTree)
+    if err != nil {
+        return nil, errors.NewTreeError(err.Error())
+    }
+
+    rootTreeObject, err := ParseTreeObjectString(rootTreeString, true)
+    if err != nil {
+        return nil, errors.NewTreeError(err.Error())
+    }
+
+    return rootTreeObject, nil
 }
 
 // Writes the snapshot's tree objects to the object database (zlib compression).
